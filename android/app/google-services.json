@@ -1,0 +1,586 @@
+{
+  "project_info": {
+    "project_number": "374432394724",
+    "project_id": "ic-flutter-2c6c3",
+    "storage_bucket": "ic-flutter-2c6c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:6ebae2390a4a46ccd42bf1",
+        "android_client_info": {
+          "package_name": "com.company.chat_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:3f019dab9c0d5568d42bf1",
+        "android_client_info": {
+          "package_name": "com.company.chat_app1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:a4688dd20c623e35d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.appointment_doctor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:df269f7f09a96464d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.blood_donation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:3f1f669beb552c95d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.blooddonation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:a24f45957ad34b1ed42bf1",
+        "android_client_info": {
+          "package_name": "com.example.chat_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:562921bbc9da2b24d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.chat_app1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:b7931418ab1cc367d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.chat_verse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:73110f74c4bb75e5d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.chatting_verse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:26e71944e7e60566d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.doctor_appointment"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:fcdfadff5c9337d6d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.geo_commerce_search_optimizer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:3bc83f128dfea4bbd42bf1",
+        "android_client_info": {
+          "package_name": "com.example.task_manager_firebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:b9ce2a271032d30dd42bf1",
+        "android_client_info": {
+          "package_name": "com.example.task_manager_firebase_getx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:c48ea5e02475cab2d42bf1",
+        "android_client_info": {
+          "package_name": "com.example.taskmanager_getx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:dc7973558c329b10d42bf1",
+        "android_client_info": {
+          "package_name": "com.tanvir.chat_verse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374432394724:android:f6c1c7147114f3b2d42bf1",
+        "android_client_info": {
+          "package_name": "com.tanvirul.geo_commerce"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWpFBO87nkgXH60VfUrxIoPkhJ61qbxE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "374432394724-j4e2tph2fm24jo8mamq5kl5a0tanq52u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "374432394724-090rctnp9pboo7v45855fr3oivkuandq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloodDonation"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
