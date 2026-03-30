@@ -1,6 +1,8 @@
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,11 +35,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       withData: true,
     );
 
-    if (result != null && result.files.single.bytes != null) {
-      setState(() {
-        imageBytes = result.files.single.bytes!;
-      });
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.single;
+    Uint8List? pickedBytes = file.bytes;
+
+    if (pickedBytes == null && !kIsWeb && file.path != null) {
+      pickedBytes = await File(file.path!).readAsBytes();
     }
+
+    if (pickedBytes == null) return;
+
+    setState(() {
+      imageBytes = pickedBytes;
+    });
   }
 
   @override
@@ -79,57 +90,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 child: Column(
                   children: [
-                    GestureDetector(
-                      onTap: pickImage,
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 48,
-                            backgroundColor: const Color(0xFFEDEFFF),
-                            backgroundImage:
-                            imageBytes != null ? MemoryImage(imageBytes!) : null,
-                            child: imageBytes == null
-                                ? const Icon(
-                              Icons.person,
-                              size: 42,
-                              color: Color(0xFF5B5FEF),
-                            )
-                                : null,
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(7),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFF5B5FEF),
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                    // GestureDetector(
+                    //   onTap: pickImage,
+                    //   child: Stack(
+                    //     children: [
+                    //       CircleAvatar(
+                    //         radius: 48,
+                    //         backgroundColor: const Color(0xFFEDEFFF),
+                    //         backgroundImage:
+                    //         imageBytes != null
+                    //             ? MemoryImage(imageBytes!)
+                    //             : null,
+                    //         child: imageBytes == null
+                    //             ? const Icon(
+                    //           Icons.person,
+                    //           size: 42,
+                    //           color: Color(0xFF5B5FEF),
+                    //         )
+                    //             : null,
+                    //       ),
+                    //       Positioned(
+                    //         right: 0,
+                    //         bottom: 0,
+                    //         child: Container(
+                    //           padding: const EdgeInsets.all(7),
+                    //           decoration: const BoxDecoration(
+                    //             shape: BoxShape.circle,
+                    //             color: Color(0xFF5B5FEF),
+                    //           ),
+                    //           child: const Icon(
+                    //             Icons.camera_alt,
+                    //             size: 18,
+                    //             color: Colors.white,
+                    //           ),
+                    //         ),
+                    //       )
+                    //     ],
+                    //   ),
+                    // ),
                     const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: pickImage,
-                      child: const Text(
-                        'Upload Photo',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
+                    // TextButton(
+                    //   onPressed: pickImage,
+                    //   child: const Text(
+                    //     'Upload Photo',
+                    //     style: TextStyle(
+                    //       fontWeight: FontWeight.w700,
+                    //     ),
+                    //   ),
+                    // ),
                     const SizedBox(height: 10),
                     CustomTextField(
                       controller: _nameController,
                       hint: 'Full name',
-                      validator: (v) => Validators.requiredField(v, 'Full name'),
+                      validator: (v) =>
+                          Validators.requiredField(v, 'Full name'),
                       prefixIcon: const Icon(Icons.person_outline),
                     ),
                     const SizedBox(height: 14),
@@ -160,47 +174,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: double.infinity,
                       height: 56,
                       child: Obx(
-                            () => ElevatedButton(
-                          onPressed: controller.isLoading.value
-                              ? null
-                              : () {
-                            if (_formKey.currentState!.validate()) {
-                              controller.register(
-                                fullName: _nameController.text.trim(),
-                                address: _addressController.text.trim(),
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim(),
-                                imageBytes: imageBytes,
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: const Color(0xFF5B5FEF),
-                            disabledBackgroundColor:
-                            const Color(0xFF5B5FEF).withOpacity(.6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
+                            () =>
+                            ElevatedButton(
+                              onPressed: controller.isLoading.value
+                                  ? null
+                                  : () {
+                                if (_formKey.currentState!.validate()) {
+                                  controller.register(
+                                    fullName: _nameController.text.trim(),
+                                    address: _addressController.text.trim(),
+                                    email: _emailController.text.trim(),
+                                    password: _passwordController.text.trim(),
+                                    imageBytes: imageBytes,
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor: const Color(0xFF5B5FEF),
+                                disabledBackgroundColor:
+                                const Color(0xFF5B5FEF).withOpacity(.6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              child: controller.isLoading.value
+                                  ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: Colors.white,
+                                ),
+                              )
+                                  : const Text(
+                                'Create account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
-                          ),
-                          child: controller.isLoading.value
-                              ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              color: Colors.white,
-                            ),
-                          )
-                              : const Text(
-                            'Create account',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                   ],

@@ -1,5 +1,7 @@
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -66,11 +68,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       withData: true,
     );
 
-    if (result != null && result.files.single.bytes != null) {
-      setState(() {
-        imageBytes = result.files.single.bytes!;
-      });
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.single;
+    Uint8List? pickedBytes = file.bytes;
+
+    if (pickedBytes == null && !kIsWeb && file.path != null) {
+      pickedBytes = await File(file.path!).readAsBytes();
     }
+
+    if (pickedBytes == null) return;
+
+    setState(() {
+      imageBytes = pickedBytes;
+    });
   }
 
   Future<void> updateProfile() async {
@@ -139,46 +150,46 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           child: Column(
             children: [
-              GestureDetector(
-                onTap: pickImage,
-                child: Stack(
-                  children: [
-                    imageBytes != null
-                        ? CircleAvatar(
-                      radius: 52,
-                      backgroundImage: MemoryImage(imageBytes!),
-                    )
-                        : UserAvatar(
-                      imageUrl: currentUser?.photoUrl ?? '',
-                      radius: 52,
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF5B5FEF),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: pickImage,
-                child: const Text(
-                  'Change Photo',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
+              // GestureDetector(
+              //   onTap: pickImage,
+              //   child: Stack(
+              //     children: [
+              //       imageBytes != null
+              //           ? CircleAvatar(
+              //         radius: 52,
+              //         backgroundImage: MemoryImage(imageBytes!),
+              //       )
+              //           : UserAvatar(
+              //         imageUrl: currentUser?.photoUrl ?? '',
+              //         radius: 52,
+              //       ),
+              //       Positioned(
+              //         right: 0,
+              //         bottom: 0,
+              //         child: Container(
+              //           padding: const EdgeInsets.all(7),
+              //           decoration: const BoxDecoration(
+              //             color: Color(0xFF5B5FEF),
+              //             shape: BoxShape.circle,
+              //           ),
+              //           child: const Icon(
+              //             Icons.edit,
+              //             size: 18,
+              //             color: Colors.white,
+              //           ),
+              //         ),
+              //       )
+              //     ],
+              //   ),
+              // ),
+              // const SizedBox(height: 12),
+              // TextButton(
+              //   onPressed: pickImage,
+              //   child: const Text(
+              //     'Change Photo',
+              //     style: TextStyle(fontWeight: FontWeight.w700),
+              //   ),
+              // ),
               const SizedBox(height: 14),
               CustomTextField(
                 controller: nameController,

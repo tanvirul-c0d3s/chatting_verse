@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 
@@ -17,27 +19,86 @@ class ChatController extends GetxController {
   late String roomId;
 
   final isUploading = false.obs;
+  final isRoomReady = false.obs;
+
+  bool _didMarkInitialRead = false;
+
+  String? get myUid => _authService.currentUser?.uid;
 
   @override
   void onInit() {
     super.onInit();
+
     otherUser = Get.arguments as AppUser;
 
-    final myUid = _authService.currentUser!.uid;
-    roomId = getChatRoomId(myUid, otherUser.uid);
+    final currentUid = myUid;
+    if (currentUid == null) {
+      Future.microtask(() {
+        Get.back();
+        Get.snackbar('Session expired', 'Please login again');
+      });
+      return;
+    }
 
-    _chatService.ensureRoom(myUid, otherUser.uid);
+    roomId = getChatRoomId(currentUid, otherUser.uid);
+    _initRoom(currentUid);
+  }
+
+  Future<void> _initRoom(String currentUid) async {
+    try {
+      isRoomReady.value = false;
+
+      await _chatService.ensureRoom(currentUid, otherUser.uid);
+
+      isRoomReady.value = true;
+
+      await markMessagesAsRead();
+    } catch (e) {
+      isRoomReady.value = false;
+      Get.snackbar('Chat Error', e.toString());
+    }
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> messagesStream() {
+    return _chatService.messagesStream(roomId);
   }
 
   Future<void> sendText(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
 
+    final currentUid = myUid;
+    if (currentUid == null) return;
+
     await _chatService.sendText(
-      myUid: _authService.currentUser!.uid,
+      myUid: currentUid,
       otherUid: otherUser.uid,
       text: trimmed,
     );
+  }
+
+  Future<void> markMessagesAsRead() async {
+    if (!isRoomReady.value) return;
+
+    final currentUid = myUid;
+    if (currentUid == null) return;
+
+    try {
+      await _chatService.markRoomAsRead(
+        roomId: roomId,
+        myUid: currentUid,
+      );
+    } catch (_) {
+      // user ke snackbar dekhabo na
+      // silently ignore korchi
+    }
+  }
+
+  Future<void> markMessagesAsReadOnce() async {
+    if (_didMarkInitialRead) return;
+
+    _didMarkInitialRead = true;
+    await markMessagesAsRead();
   }
 
   Future<void> pickAndSendMedia(String type) async {
@@ -69,6 +130,9 @@ class ChatController extends GetxController {
       final Uint8List? bytes = file.bytes;
       if (bytes == null) return;
 
+      final currentUid = myUid;
+      if (currentUid == null) return;
+
       final url = await _storageService.uploadChatFileBytes(
         roomId: roomId,
         fileName: file.name,
@@ -76,7 +140,7 @@ class ChatController extends GetxController {
       );
 
       await _chatService.sendMedia(
-        myUid: _authService.currentUser!.uid,
+        myUid: currentUid,
         otherUid: otherUser.uid,
         fileUrl: url,
         fileName: file.name,

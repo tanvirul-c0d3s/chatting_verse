@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-import '../../data/models/app_user.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/user_avatar.dart';
 import 'home_controller.dart';
@@ -33,16 +33,61 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  List<AppUser> getFilteredUsers(List<AppUser> users) {
+  List<HomeUserItem> getFilteredUsers(List<HomeUserItem> users) {
     if (searchText.trim().isEmpty) return users;
 
     final query = searchText.toLowerCase().trim();
 
-    return users.where((user) {
-      final name = user.fullName.toLowerCase();
-      final email = user.email.toLowerCase();
+    return users.where((item) {
+      final name = item.user.fullName.toLowerCase();
+      final email = item.user.email.toLowerCase();
       return name.contains(query) || email.contains(query);
     }).toList();
+  }
+
+  String formatLastMessageTime(DateTime? dateTime) {
+    if (dateTime == null) return '';
+
+    final now = DateTime.now();
+
+    final isToday =
+        now.year == dateTime.year &&
+            now.month == dateTime.month &&
+            now.day == dateTime.day;
+
+    if (isToday) {
+      return DateFormat('h:mm a').format(dateTime);
+    }
+
+    final isThisYear = now.year == dateTime.year;
+    if (isThisYear) {
+      return DateFormat('dd MMM').format(dateTime);
+    }
+
+    return DateFormat('dd/MM/yyyy').format(dateTime);
+  }
+
+  String buildSubtitle(HomeUserItem item) {
+    if (item.lastMessage.isEmpty) {
+      return item.user.email;
+    }
+
+    if (item.lastMessageType == 'text') {
+      return item.lastMessage;
+    }
+
+    switch (item.lastMessageType) {
+      case 'image':
+        return '📷 Photo';
+      case 'video':
+        return '🎥 Video';
+      case 'audio':
+        return '🎵 Audio';
+      case 'file':
+        return '📄 File';
+      default:
+        return item.lastMessage;
+    }
   }
 
   @override
@@ -110,8 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  // Search Bar
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -267,13 +310,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.all(16),
                   itemCount: filteredUsers.length,
                   itemBuilder: (context, index) {
-                    final AppUser user = filteredUsers[index];
+                    final item = filteredUsers[index];
+                    final user = item.user;
+                    final hasUnread = item.unreadCount > 0;
+                    final subtitleText = buildSubtitle(item);
+                    final messageTime = item.lastMessageAt?.toDate();
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: hasUnread
+                            ? const Color(0xFFF3F0FF)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(22),
+                        border: hasUnread
+                            ? Border.all(
+                          color: const Color(0xFF5B5FEF).withOpacity(.18),
+                        )
+                            : null,
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(.05),
@@ -287,58 +341,104 @@ class _HomeScreenState extends State<HomeScreen> {
                           horizontal: 14,
                           vertical: 8,
                         ),
-                        leading: UserAvatar(
-                          imageUrl: user.photoUrl,
-                          radius: 26,
-                        ),
-                        title: Text(
-                          user.fullName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            user.email,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+                        leading: Stack(
+                          children: [
+                            UserAvatar(
+                              imageUrl: user.photoUrl,
+                              radius: 26,
                             ),
-                          ),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: user.isOnline
-                                ? Colors.green.withOpacity(.12)
-                                : Colors.grey.withOpacity(.14),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: 10,
-                                color:
-                                user.isOnline ? Colors.green : Colors.grey,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                user.isOnline ? 'Online' : 'Offline',
-                                style: TextStyle(
-                                  color: user.isOnline
-                                      ? Colors.green
-                                      : Colors.grey.shade700,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
+                            if (user.isOnline)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                  ),
                                 ),
                               ),
+                          ],
+                        ),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                user.fullName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: hasUnread
+                                      ? FontWeight.w800
+                                      : FontWeight.w700,
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              formatLastMessageTime(messageTime),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: hasUnread
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: hasUnread
+                                    ? const Color(0xFF5B5FEF)
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  subtitleText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: hasUnread
+                                        ? const Color(0xFF2D2F39)
+                                        : Colors.grey.shade600,
+                                    fontWeight: hasUnread
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              if (hasUnread) ...[
+                                const SizedBox(width: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF5B5FEF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    item.unreadCount > 99
+                                        ? '99+'
+                                        : item.unreadCount.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

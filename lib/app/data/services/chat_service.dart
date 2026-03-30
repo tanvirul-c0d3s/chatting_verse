@@ -16,6 +16,14 @@ class ChatService {
         .snapshots();
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> roomsStream(String myUid) {
+    return _firestore
+        .collection('chat_rooms')
+        .where('participants', arrayContains: myUid)
+        .orderBy('lastMessageAt', descending: true)
+        .snapshots();
+  }
+
   Future<String> ensureRoom(String myUid, String otherUid) async {
     final roomId = getChatRoomId(myUid, otherUid);
 
@@ -28,7 +36,11 @@ class ChatService {
         'participants': [myUid, otherUid],
         'lastMessage': '',
         'lastMessageType': 'text',
-        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastMessageAt': null,
+        'unreadCounts': {
+          myUid: 0,
+          otherUid: 0,
+        },
       });
     }
 
@@ -70,6 +82,8 @@ class ChatService {
       'lastMessage': trimmed,
       'lastMessageType': 'text',
       'lastMessageAt': FieldValue.serverTimestamp(),
+      'unreadCounts.$otherUid': FieldValue.increment(1),
+      'unreadCounts.$myUid': 0,
     }, SetOptions(merge: true));
   }
 
@@ -107,6 +121,40 @@ class ChatService {
       'lastMessage': type.toUpperCase(),
       'lastMessageType': type,
       'lastMessageAt': FieldValue.serverTimestamp(),
+      'unreadCounts.$otherUid': FieldValue.increment(1),
+      'unreadCounts.$myUid': 0,
     }, SetOptions(merge: true));
+  }
+
+  Future<void> markRoomAsRead({
+    required String roomId,
+    required String myUid,
+  }) async {
+    final roomRef = _firestore.collection('chat_rooms').doc(roomId);
+
+    await roomRef.set({
+      'unreadCounts.$myUid': 0,
+    }, SetOptions(merge: true));
+
+    final messages = await roomRef
+        .collection('messages')
+        .where('receiverId', isEqualTo: myUid)
+        .limit(100)
+        .get();
+
+    if (messages.docs.isEmpty) return;
+
+    final batch = _firestore.batch();
+
+    for (final doc in messages.docs) {
+      final seenBy = List<String>.from(doc.data()['seenBy'] ?? const []);
+      if (!seenBy.contains(myUid)) {
+        batch.update(doc.reference, {
+          'seenBy': FieldValue.arrayUnion([myUid]),
+        });
+      }
+    }
+
+    await batch.commit();
   }
 }

@@ -23,25 +23,32 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    controller = Get.put(ChatController());
+
+    controller = Get.isRegistered<ChatController>()
+        ? Get.find<ChatController>()
+        : Get.put(ChatController());
   }
 
   @override
   void dispose() {
     textController.dispose();
     scrollController.dispose();
-    Get.delete<ChatController>();
+
+    if (Get.isRegistered<ChatController>()) {
+      Get.delete<ChatController>();
+    }
+
     super.dispose();
   }
 
   void scrollToBottom() {
-    if (scrollController.hasClients) {
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    }
+    if (!scrollController.hasClients) return;
+
+    scrollController.animateTo(
+      scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> handleSend() async {
@@ -51,6 +58,10 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       await controller.sendText(text);
       textController.clear();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollToBottom();
+      });
     } catch (e) {
       Get.snackbar('Send Failed', e.toString());
     }
@@ -115,92 +126,112 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('chat_rooms')
-                  .doc(controller.roomId)
-                  .collection('messages')
-                  .orderBy('createdAt', descending: false)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Error: ${snapshot.error}'),
-                  );
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                final docs = snapshot.data?.docs ?? [];
-
-                if (docs.isEmpty) {
-                  return Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      margin: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(.05),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          )
-                        ],
-                      ),
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.mark_chat_unread_outlined,
-                            size: 54,
-                            color: Color(0xFF5B5FEF),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No messages yet',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Say hi and start the conversation',
-                            style: TextStyle(
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  scrollToBottom();
-                });
-
-                return ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final msg = ChatMessage.fromMap(docs[index].data());
-
-                    return MessageBubble(
-                      message: msg,
-                      isMe: msg.senderId != controller.otherUser.uid,
-                    );
-                  },
+            child: Obx(() {
+              if (!controller.isRoomReady.value) {
+                return const Center(
+                  child: CircularProgressIndicator(),
                 );
-              },
-            ),
+              }
+
+              return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: controller.messagesStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(
+                          'Error: ${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  final docs = snapshot.data?.docs ?? [];
+
+                  if (snapshot.hasData) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      await controller.markMessagesAsReadOnce();
+                    });
+                  }
+
+                  if (docs.isEmpty) {
+                    return Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        margin: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(.05),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.mark_chat_unread_outlined,
+                              size: 54,
+                              color: Color(0xFF5B5FEF),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No messages yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Say hi and start the conversation',
+                              style: TextStyle(
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  final messages = docs
+                      .map((doc) => ChatMessage.fromMap(doc.data()))
+                      .toList();
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    scrollToBottom();
+                  });
+
+                  return ListView.builder(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+
+                      return MessageBubble(
+                        message: msg,
+                        isMe: msg.senderId != controller.otherUser.uid,
+                      );
+                    },
+                  );
+                },
+              );
+            }),
           ),
           Obx(() {
             return controller.isUploading.value
@@ -234,7 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: Colors.black.withOpacity(.04),
                     blurRadius: 12,
                     offset: const Offset(0, -4),
-                  )
+                  ),
                 ],
               ),
               child: Row(
@@ -270,6 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: textController,
+                      textInputAction: TextInputAction.send,
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
                         filled: true,

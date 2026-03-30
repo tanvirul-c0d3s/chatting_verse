@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:get/get.dart';
@@ -42,7 +43,13 @@ class AuthController extends GetxController {
       isLoading.value = true;
 
       String fcmToken = '';
-      print('step 1 start');
+      try {
+        fcmToken = await _notificationService
+            .getFcmToken()
+            .timeout(const Duration(seconds: 5));
+      } catch (_) {
+        fcmToken = '';
+      }
 
       final credential = await _authService.register(
         fullName: fullName,
@@ -51,43 +58,39 @@ class AuthController extends GetxController {
         password: password,
         photoUrl: '',
         fcmToken: fcmToken,
-      );
-      print('step 2 auth done');
+      ).timeout(const Duration(seconds: 20));
 
       final uid = credential.user!.uid;
       String photoUrl = '';
 
       if (imageBytes != null) {
-        print('step 3 upload start');
-
         photoUrl = await _storageService.uploadProfileBytes(
           uid: uid,
           bytes: imageBytes,
-        );
-        print('step 4 upload done');
+        ).timeout(const Duration(seconds: 30));
 
         await _authService.updateProfile(
           uid: uid,
           fullName: fullName,
           address: address,
           photoUrl: photoUrl,
-        );
-        print('step 5 profile updated');
-
+        ).timeout(const Duration(seconds: 15));
       }
 
       await _sessionService.saveLogin(
         uid: uid,
         email: email,
-      );
-      print('step 6 session saved');
-
+      ).timeout(const Duration(seconds: 10));
 
       Get.snackbar('Success', 'Registration successful');
       Get.offAllNamed(AppRoutes.home);
+    } on TimeoutException {
+      Get.snackbar(
+        'Register Failed',
+        'Request timed out. Please check internet and try again.',
+      );
     } catch (e) {
       Get.snackbar('Register Failed', e.toString());
-      print('REGISTER ERROR: $e');
     } finally {
       isLoading.value = false;
     }
