@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../data/models/app_user.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/services/auth_service.dart';
+import '../../routes/app_routes.dart';
 import '../../widgets/custom_text_field.dart'; // <-- adjust path if needed
 import '../../widgets/message_bubble.dart';
 import 'group_chat_controller.dart';
@@ -369,8 +370,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     );
   }
 
-
-
   Future<void> handleLeaveGroup() async {
     final uid = controller.myUid;
     if (uid == null) return;
@@ -410,7 +409,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         snackPosition: SnackPosition.BOTTOM,
       );
 
-      Get.back();
+      Get.offAllNamed(AppRoutes.home);
     } catch (e) {
       if (!mounted) return;
       Get.snackbar('Group', 'Failed to leave group: $e');
