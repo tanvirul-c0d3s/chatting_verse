@@ -90,9 +90,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 child: Column(
                   children: [
-
+                    // GestureDetector(
+                    //   onTap: pickImage,
+                    //   child: Stack(
+                    //     children: [
+                    //       CircleAvatar(
+                    //         radius: 48,
+                    //         backgroundColor: const Color(0xFFEDEFFF),
+                    //         backgroundImage:
+                    //         imageBytes != null
+                    //             ? MemoryImage(imageBytes!)
+                    //             : null,
+                    //         child: imageBytes == null
+                    //             ? const Icon(
+                    //           Icons.person,
+                    //           size: 42,
+                    //           color: Color(0xFF5B5FEF),
+                    //         )
+                    //             : null,
+                    //       ),
+                    //       Positioned(
+                    //         right: 0,
+                    //         bottom: 0,
+                    //         child: Container(
+                    //           padding: const EdgeInsets.all(7),
+                    //           decoration: const BoxDecoration(
+                    //             shape: BoxShape.circle,
+                    //             color: Color(0xFF5B5FEF),
+                    //           ),
+                    //           child: const Icon(
+                    //             Icons.camera_alt,
+                    //             size: 18,
+                    //             color: Colors.white,
+                    //           ),
+                    //         ),
+                    //       )
+                    //     ],
+                    //   ),
+                    // ),
                     const SizedBox(height: 12),
-
+                    // TextButton(
+                    //   onPressed: pickImage,
+                    //   child: const Text(
+                    //     'Upload Photo',
+                    //     style: TextStyle(
+                    //       fontWeight: FontWeight.w700,
+                    //     ),
+                    //   ),
+                    // ),
                     const SizedBox(height: 10),
                     CustomTextField(
                       controller: _nameController,
