@@ -131,11 +131,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () async {
-                        await controller.createGroup(
+                        final groupId = await controller.createGroup(
                           name: nameController.text,
                           selectedMemberIds: selected.toList(),
                         );
-                        if (mounted) Navigator.pop(context);
+                        if (!mounted) return;
+
+                        if (groupId == null || groupId.isEmpty) {
+                          return;
+                        }
+
+                        Navigator.pop(context);
+                        setState(() => bottomTabIndex = 2);
                       },
                       child: const Text('Create Group'),
                     ),

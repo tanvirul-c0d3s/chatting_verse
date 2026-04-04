@@ -137,27 +137,49 @@ class HomeController extends GetxController {
       },
     );
 
-    _groupsSubscription = _chatService.groupChatsStream(myUid).listen((snapshot) {
-      final items = snapshot.docs.map((doc) {
-        final data = doc.data();
-        final unreadRaw = data['unreadCounts'];
-        final unreadMap = unreadRaw is Map
-            ? Map<String, dynamic>.from(unreadRaw)
-            : <String, dynamic>{};
+    _groupsSubscription = _chatService.groupChatsStream(myUid).listen(
+          (snapshot) {
+        final sortedDocs = [...snapshot.docs]..sort((a, b) {
+          final aData = a.data();
+          final bData = b.data();
+          final aTs =
+              (aData['updatedAt'] as Timestamp?) ??
+                  (aData['lastMessageAt'] as Timestamp?) ??
+                  (aData['createdAt'] as Timestamp?);
+          final bTs =
+              (bData['updatedAt'] as Timestamp?) ??
+                  (bData['lastMessageAt'] as Timestamp?) ??
+                  (bData['createdAt'] as Timestamp?);
 
-        return GroupItem(
-          groupId: doc.id,
-          name: (data['name'] ?? 'Group').toString(),
-          members: List<String>.from(data['members'] ?? const []),
-          lastMessage: (data['lastMessage'] ?? '').toString(),
-          lastMessageAt: data['lastMessageAt'] as Timestamp?,
-          unreadCount:
-          unreadMap[myUid] is num ? (unreadMap[myUid] as num).toInt() : 0,
-        );
-      }).toList();
+          final aMs = aTs?.millisecondsSinceEpoch ?? 0;
+          final bMs = bTs?.millisecondsSinceEpoch ?? 0;
+          return bMs.compareTo(aMs);
+        });
 
-      groups.assignAll(items);
-    });
+        final items = sortedDocs.map((doc) {
+          final data = doc.data();
+          final unreadRaw = data['unreadCounts'];
+          final unreadMap = unreadRaw is Map
+              ? Map<String, dynamic>.from(unreadRaw)
+              : <String, dynamic>{};
+
+          return GroupItem(
+            groupId: doc.id,
+            name: (data['name'] ?? 'Group').toString(),
+            members: List<String>.from(data['members'] ?? const []),
+            lastMessage: (data['lastMessage'] ?? '').toString(),
+            lastMessageAt: data['lastMessageAt'] as Timestamp?,
+            unreadCount:
+            unreadMap[myUid] is num ? (unreadMap[myUid] as num).toInt() : 0,
+          );
+        }).toList();
+
+        groups.assignAll(items);
+      },
+      onError: (error) {
+        Get.snackbar('Groups', 'Failed to load groups: $error');
+      },
+    );
 
     _sentRequestsSubscription = _chatService.sentRequestsStream(myUid).listen(
           (snapshot) {
@@ -224,23 +246,25 @@ class HomeController extends GetxController {
     );
   }
 
-  Future<void> createGroup({
+  Future<String?> createGroup({
     required String name,
     required List<String> selectedMemberIds,
   }) async {
     final myUid = _authService.currentUser?.uid;
-    if (myUid == null) return;
+    if (myUid == null) return null;
 
     if (name.trim().isEmpty || selectedMemberIds.isEmpty) {
       Get.snackbar('Group', 'Please add group name and select members');
-      return;
+      return null;
     }
 
-    await _chatService.createGroup(
+    final groupId = await _chatService.createGroup(
       creatorId: myUid,
       name: name.trim(),
       memberIds: selectedMemberIds,
     );
+
+    return groupId;
   }
 
   String requestStatusFor(String userId) {

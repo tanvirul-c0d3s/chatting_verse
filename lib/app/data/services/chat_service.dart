@@ -37,7 +37,6 @@ class ChatService {
     return _firestore
         .collection('chat_groups')
         .where('members', arrayContains: myUid)
-        .orderBy('updatedAt', descending: true)
         .snapshots();
   }
 

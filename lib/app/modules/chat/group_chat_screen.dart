@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../data/models/app_user.dart';
 import '../../data/models/chat_message.dart';
+import '../../data/services/auth_service.dart';
 import '../../widgets/message_bubble.dart';
 import 'group_chat_controller.dart';
 
@@ -18,6 +19,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   late GroupChatController controller;
   final TextEditingController textController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  final Map<String, String> _userNames = {};
+  final Set<String> _memberIds = <String>{};
 
   @override
   void initState() {
@@ -25,6 +28,40 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     controller = Get.isRegistered<GroupChatController>()
         ? Get.find<GroupChatController>()
         : Get.put(GroupChatController());
+    preloadUserNames();
+  }
+
+  Future<void> preloadUserNames() async {
+    final args = Get.arguments as Map<String, dynamic>? ?? {};
+    final eligible = (args['eligibleUsers'] as List?)?.cast<AppUser>() ?? [];
+    final members =
+        (args['members'] as List?)?.map((e) => e.toString()).toSet() ??
+            <String>{};
+    final authService = Get.find<AuthService>();
+    _memberIds
+      ..clear()
+      ..addAll(members);
+
+    for (final user in eligible) {
+      _userNames[user.uid] = user.fullName;
+    }
+
+    if (mounted) setState(() {});
+
+    for (final memberId in members) {
+      if (_userNames.containsKey(memberId)) continue;
+
+      final user = await authService.getUserById(memberId);
+      if (user == null) continue;
+
+      _userNames[user.uid] = user.fullName;
+      if (mounted) setState(() {});
+    }
+  }
+
+  String memberLabel(String uid) {
+    if (uid == controller.myUid) return 'You';
+    return _userNames[uid] ?? 'Member';
   }
 
   @override
@@ -98,7 +135,18 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () async {
-                        await controller.addMembers(selected.toList());
+                        final selectedIds = selected.toList();
+                        await controller.addMembers(selectedIds);
+
+                        for (final uid in selectedIds) {
+                          _memberIds.add(uid);
+                          final found = eligible.where((e) => e.uid == uid).toList();
+                          if (found.isNotEmpty) {
+                            _userNames[uid] = found.first.fullName;
+                          }
+                        }
+
+                        if (mounted) setState(() {});
                         if (mounted) Navigator.pop(context);
                       },
                       child: const Text('Add Selected Members'),
@@ -189,6 +237,57 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
       body: Column(
         children: [
+          if (_memberIds.isNotEmpty)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Members (${_memberIds.length})',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF5B5FEF),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _memberIds
+                          .map(
+                            (uid) => Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF0FF),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            memberLabel(uid),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      )
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: controller.messagesStream(),
@@ -219,6 +318,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       child: MessageBubble(
                         message: msg,
                         isMe: msg.senderId == controller.myUid,
+                        senderName: msg.senderId == controller.myUid
+                            ? null
+                            : (_userNames[msg.senderId] ?? 'Member'),
                       ),
                     );
                   },

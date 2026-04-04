@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../modules/auth/login_screen.dart';
 import '../modules/auth/register_screen.dart';
 import '../modules/chat/chat_screen.dart';
+import '../modules/chat/group_chat_screen.dart';
 import '../modules/home/home_screen.dart';
 import '../modules/profile/edit_profile_screen.dart';
 import '../modules/profile/profile_screen.dart';
@@ -31,6 +32,10 @@ class AppPages {
     GetPage(
       name: AppRoutes.chat,
       page: () => const ChatScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.groupChat,
+      page: () => const GroupChatScreen(),
     ),
     GetPage(
       name: AppRoutes.profile,

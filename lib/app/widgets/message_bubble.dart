@@ -6,11 +6,13 @@ import 'media_preview_widget.dart';
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isMe;
+  final String? senderName;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.isMe,
+    this.senderName,
   });
 
   @override
@@ -55,6 +57,18 @@ class MessageBubble extends StatelessWidget {
             ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!isMe && senderName != null && senderName!.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  senderName!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF5B5FEF),
+                  ),
+                ),
+              ),
             Text(
               message.text,
               style: TextStyle(
