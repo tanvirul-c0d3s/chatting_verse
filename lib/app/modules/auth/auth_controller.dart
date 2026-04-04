@@ -1,17 +1,13 @@
 import 'dart:async';
-import 'dart:typed_data';
-
 import 'package:get/get.dart';
 
 import '../../data/services/auth_service.dart';
 import '../../data/services/notification_service.dart';
 import '../../data/services/session_service.dart';
-import '../../data/services/storage_service.dart';
 import '../../routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
-  final StorageService _storageService = Get.find<StorageService>();
   final SessionService _sessionService = Get.find<SessionService>();
   final NotificationService _notificationService =
   Get.find<NotificationService>();
@@ -37,7 +33,6 @@ class AuthController extends GetxController {
     required String address,
     required String email,
     required String password,
-    required Uint8List? imageBytes,
   }) async {
     try {
       isLoading.value = true;
@@ -61,21 +56,6 @@ class AuthController extends GetxController {
       ).timeout(const Duration(seconds: 20));
 
       final uid = credential.user!.uid;
-      String photoUrl = '';
-
-      if (imageBytes != null) {
-        photoUrl = await _storageService.uploadProfileBytes(
-          uid: uid,
-          bytes: imageBytes,
-        ).timeout(const Duration(seconds: 30));
-
-        await _authService.updateProfile(
-          uid: uid,
-          fullName: fullName,
-          address: address,
-          photoUrl: photoUrl,
-        ).timeout(const Duration(seconds: 15));
-      }
 
       await _sessionService.saveLogin(
         uid: uid,

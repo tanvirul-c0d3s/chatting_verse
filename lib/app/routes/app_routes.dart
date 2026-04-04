@@ -4,6 +4,7 @@ abstract class AppRoutes {
   static const register = '/register';
   static const home = '/home';
   static const chat = '/chat';
+  static const groupChat = '/group-chat';
   static const profile = '/profile';
   static const editProfile = '/edit-profile';
   static const userInfo = '/user-info';

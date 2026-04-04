@@ -67,6 +67,68 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> onLongPressMessage(ChatMessage msg) async {
+    final currentUid = controller.myUid;
+    if (currentUid == null) return;
+
+    final isMyText = msg.senderId == currentUid && msg.type == 'text' && !msg.isDeleted;
+    if (!isMyText) return;
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Edit message'),
+              onTap: () => Navigator.pop(context, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('Delete message', style: TextStyle(color: Colors.red)),
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (action == 'edit') {
+      final editController = TextEditingController(text: msg.text);
+      final newText = await showDialog<String>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Edit Message'),
+          content: TextField(
+            controller: editController,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Type updated message'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, editController.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      );
+
+      if (newText != null && newText.trim().isNotEmpty) {
+        await controller.editMyTextMessage(messageId: msg.id, text: newText.trim());
+      }
+      return;
+    }
+
+    if (action == 'delete') {
+      await controller.deleteMyTextMessage(msg.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final otherUser = controller.otherUser;
@@ -223,9 +285,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final msg = messages[index];
 
-                      return MessageBubble(
-                        message: msg,
-                        isMe: msg.senderId != controller.otherUser.uid,
+                      return GestureDetector(
+                        onLongPress: () => onLongPressMessage(msg),
+                        child: MessageBubble(
+                          message: msg,
+                          isMe: msg.senderId != controller.otherUser.uid,
+                        ),
                       );
                     },
                   );
@@ -233,27 +298,6 @@ class _ChatScreenState extends State<ChatScreen> {
               );
             }),
           ),
-          Obx(() {
-            return controller.isUploading.value
-                ? Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Text(
-                'Uploading...',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            )
-                : const SizedBox.shrink();
-          }),
           SafeArea(
             top: false,
             child: Container(
@@ -270,34 +314,6 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               child: Row(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F3F8),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: PopupMenuButton<String>(
-                      onSelected: controller.pickAndSendMedia,
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(
-                          value: 'image',
-                          child: Text('Send Image'),
-                        ),
-                        PopupMenuItem(
-                          value: 'video',
-                          child: Text('Send Video'),
-                        ),
-                        PopupMenuItem(
-                          value: 'audio',
-                          child: Text('Send Audio'),
-                        ),
-                      ],
-                      child: const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Icon(Icons.attach_file),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: textController,

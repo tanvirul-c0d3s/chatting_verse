@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/models/app_user.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/user_avatar.dart';
 import 'home_controller.dart';
@@ -18,6 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController searchController = TextEditingController();
 
   String searchText = '';
+  int bottomTabIndex = 0;
+  int requestTopTabIndex = 0;
 
   @override
   void initState() {
@@ -33,9 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  List<HomeUserItem> getFilteredUsers(List<HomeUserItem> users) {
+  List<HomeUserItem> getFilteredChats(List<HomeUserItem> users) {
     if (searchText.trim().isEmpty) return users;
-
     final query = searchText.toLowerCase().trim();
 
     return users.where((item) {
@@ -45,49 +47,169 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
+  List<AppUser> getFilteredAllUsers(List<AppUser> users) {
+    if (searchText.trim().isEmpty) return users;
+    final query = searchText.toLowerCase().trim();
+
+    return users.where((item) {
+      final name = item.fullName.toLowerCase();
+      final email = item.email.toLowerCase();
+      return name.contains(query) || email.contains(query);
+    }).toList();
+  }
+
   String formatLastMessageTime(DateTime? dateTime) {
     if (dateTime == null) return '';
 
     final now = DateTime.now();
-
     final isToday =
         now.year == dateTime.year &&
             now.month == dateTime.month &&
             now.day == dateTime.day;
 
-    if (isToday) {
-      return DateFormat('h:mm a').format(dateTime);
-    }
-
-    final isThisYear = now.year == dateTime.year;
-    if (isThisYear) {
-      return DateFormat('dd MMM').format(dateTime);
-    }
+    if (isToday) return DateFormat('h:mm a').format(dateTime);
+    if (now.year == dateTime.year) return DateFormat('dd MMM').format(dateTime);
 
     return DateFormat('dd/MM/yyyy').format(dateTime);
   }
 
   String buildSubtitle(HomeUserItem item) {
     if (item.lastMessage.isEmpty) {
-      return item.user.email;
+      return 'Now you can start conversation';
     }
 
-    if (item.lastMessageType == 'text') {
-      return item.lastMessage;
+    return item.lastMessage;
+  }
+
+  Future<void> showCreateGroupDialog() async {
+    final nameController = TextEditingController();
+    final selected = <String>{};
+    final friendUsers = controller.users.map((e) => e.user).toList();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Create Group', style: TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(hintText: 'Group name'),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 260,
+                      child: ListView.builder(
+                        itemCount: friendUsers.length,
+                        itemBuilder: (_, i) {
+                          final user = friendUsers[i];
+                          return CheckboxListTile(
+                            value: selected.contains(user.uid),
+                            onChanged: (v) {
+                              setStateModal(() {
+                                if (v == true) {
+                                  selected.add(user.uid);
+                                } else {
+                                  selected.remove(user.uid);
+                                }
+                              });
+                            },
+                            title: Text(user.fullName),
+                            subtitle: Text(user.email),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await controller.createGroup(
+                          name: nameController.text,
+                          selectedMemberIds: selected.toList(),
+                        );
+                        if (mounted) Navigator.pop(context);
+                      },
+                      child: const Text('Create Group'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildRequestTopTabs(bool hasIncoming) {
+    Widget buildTab({
+      required int index,
+      required String text,
+      bool withRedDot = false,
+    }) {
+      final selected = requestTopTabIndex == index;
+      return Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => requestTopTabIndex = index),
+          child: Container(
+            height: 42,
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xFF5B5FEF) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected
+                    ? const Color(0xFF5B5FEF)
+                    : Colors.grey.withOpacity(.25),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: selected ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (withRedDot) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 9,
+                    height: 9,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
-    switch (item.lastMessageType) {
-      case 'image':
-        return '📷 Photo';
-      case 'video':
-        return '🎥 Video';
-      case 'audio':
-        return '🎵 Audio';
-      case 'file':
-        return '📄 File';
-      default:
-        return item.lastMessage;
-    }
+    return Row(
+      children: [
+        buildTab(
+          index: 0,
+          text: 'Upcoming Requests',
+          withRedDot: hasIncoming,
+        ),
+        const SizedBox(width: 10),
+        buildTab(index: 1, text: 'All Users'),
+      ],
+    );
   }
 
   @override
@@ -105,19 +227,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(30),
-                ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
               ),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Messages',
                               style: TextStyle(
                                 fontSize: 28,
@@ -125,10 +245,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.white,
                               ),
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
-                              'Find friends and start chatting',
-                              style: TextStyle(
+                              bottomTabIndex == 0
+                                  ? 'Unread chat stays highlighted until opened'
+                                  : bottomTabIndex == 1
+                                  ? 'Manage requests and send new request'
+                                  : 'Create group and chat with members',
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white70,
                                 fontWeight: FontWeight.w500,
@@ -146,10 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.white.withOpacity(.18),
                             borderRadius: BorderRadius.circular(18),
                           ),
-                          child: const Icon(
-                            Icons.person_outline,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.person_outline, color: Colors.white),
                         ),
                       ),
                     ],
@@ -159,38 +280,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
                     ),
                     child: TextField(
                       controller: searchController,
-                      onChanged: (value) {
-                        setState(() {
-                          searchText = value;
-                        });
-                      },
+                      onChanged: (value) => setState(() => searchText = value),
                       decoration: InputDecoration(
                         hintText: 'Search by name or email...',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Color(0xFF5B5FEF),
-                        ),
+                        prefixIcon: const Icon(Icons.search, color: Color(0xFF5B5FEF)),
                         suffixIcon: searchText.isNotEmpty
                             ? IconButton(
                           onPressed: () {
                             searchController.clear();
-                            setState(() {
-                              searchText = '';
-                            });
+                            setState(() => searchText = '');
                           },
                           icon: const Icon(Icons.close),
                         )
@@ -214,214 +315,62 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
-                final filteredUsers = getFilteredUsers(controller.users);
+                if (bottomTabIndex == 0) {
+                  final chats = getFilteredChats(controller.users);
 
-                if (controller.users.isEmpty) {
-                  return Center(
-                    child: Container(
-                      margin: const EdgeInsets.all(24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(.05),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 54,
-                            color: Color(0xFF5B5FEF),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No users found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+                  if (chats.isEmpty) {
+                    return const Center(child: Text('No accepted chat yet'));
+                  }
 
-                if (filteredUsers.isEmpty) {
-                  return Center(
-                    child: Container(
-                      margin: const EdgeInsets.all(24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(.05),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 54,
-                            color: Color(0xFF5B5FEF),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No matching user found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 6),
-                          Text(
-                            'Try searching with another name or email',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: chats.length,
+                    itemBuilder: (context, index) {
+                      final item = chats[index];
+                      final user = item.user;
+                      final hasUnread = item.unreadCount > 0;
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredUsers.length,
-                  itemBuilder: (context, index) {
-                    final item = filteredUsers[index];
-                    final user = item.user;
-                    final hasUnread = item.unreadCount > 0;
-                    final subtitleText = buildSubtitle(item);
-                    final messageTime = item.lastMessageAt?.toDate();
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: hasUnread
-                            ? const Color(0xFFF3F0FF)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                        border: hasUnread
-                            ? Border.all(
-                          color: const Color(0xFF5B5FEF).withOpacity(.18),
-                        )
-                            : null,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(.05),
-                            blurRadius: 14,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: hasUnread
+                              ? const Color(0xFFF3F0FF)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: hasUnread
+                              ? Border.all(
+                            color: const Color(0xFF5B5FEF).withOpacity(.25),
+                          )
+                              : null,
                         ),
-                        leading: Stack(
-                          children: [
-                            UserAvatar(
-                              imageUrl: user.photoUrl,
-                              radius: 26,
+                        child: ListTile(
+                          leading: UserAvatar(imageUrl: user.photoUrl, radius: 24),
+                          title: Text(
+                            user.fullName,
+                            style: TextStyle(
+                              fontWeight: hasUnread
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                             ),
-                            if (user.isOnline)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: 14,
-                                  height: 14,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                user.fullName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontWeight: hasUnread
-                                      ? FontWeight.w800
-                                      : FontWeight.w700,
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              formatLastMessageTime(messageTime),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: hasUnread
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: hasUnread
-                                    ? const Color(0xFF5B5FEF)
-                                    : Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Row(
+                          ),
+                          subtitle: Text(
+                            buildSubtitle(item),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  subtitleText,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: hasUnread
-                                        ? const Color(0xFF2D2F39)
-                                        : Colors.grey.shade600,
-                                    fontWeight: hasUnread
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              if (hasUnread) ...[
-                                const SizedBox(width: 10),
+                              Text(formatLastMessageTime(item.lastMessageAt?.toDate())),
+                              if (hasUnread)
                                 Container(
+                                  margin: const EdgeInsets.only(top: 6),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
-                                    vertical: 4,
+                                    vertical: 2,
                                   ),
                                   decoration: const BoxDecoration(
                                     color: Color(0xFF5B5FEF),
@@ -433,27 +382,193 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : item.unreadCount.toString(),
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 11,
                                       fontWeight: FontWeight.w700,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ),
-                              ],
                             ],
                           ),
+                          onTap: () => Get.toNamed(AppRoutes.chat, arguments: user),
                         ),
-                        onTap: () => Get.toNamed(
-                          AppRoutes.chat,
-                          arguments: user,
+                      );
+                    },
+                  );
+                }
+
+                if (bottomTabIndex == 1) {
+                  final incoming = controller.incomingRequests;
+                  final hasIncoming = incoming.isNotEmpty;
+                  final allUsers = getFilteredAllUsers(controller.allUsers);
+
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      buildRequestTopTabs(hasIncoming),
+                      const SizedBox(height: 14),
+                      if (requestTopTabIndex == 0) ...[
+                        if (incoming.isEmpty)
+                          const Card(
+                            child: ListTile(
+                              title: Text('No upcoming request'),
+                              subtitle: Text('When someone sends request, it will show here.'),
+                            ),
+                          ),
+                        ...incoming.map((request) {
+                          final sender = controller.userById(request.senderId);
+                          if (sender == null) return const SizedBox.shrink();
+
+                          return Card(
+                            child: ListTile(
+                              leading: UserAvatar(imageUrl: sender.photoUrl, radius: 22),
+                              title: Text(sender.fullName),
+                              subtitle: Text(sender.email),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => controller.rejectRequest(request),
+                                    child: const Text('Reject'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => controller.acceptRequest(request),
+                                    child: const Text('Accept'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ] else ...[
+                        ...allUsers.map((user) {
+                          final status = controller.requestStatusFor(user.uid);
+
+                          Widget trailing;
+                          if (status == 'accepted') {
+                            trailing = const Text('Accepted');
+                          } else if (status == 'pending_sent') {
+                            trailing = const Text('Pending');
+                          } else if (status == 'pending_received') {
+                            trailing = const Text('Check upcoming');
+                          } else {
+                            trailing = ElevatedButton(
+                              onPressed: () => controller.sendRequest(user.uid),
+                              child: const Text('Send Request'),
+                            );
+                          }
+
+                          return Card(
+                            child: ListTile(
+                              leading: UserAvatar(imageUrl: user.photoUrl, radius: 22),
+                              title: Text(user.fullName),
+                              subtitle: Text(user.email),
+                              trailing: trailing,
+                            ),
+                          );
+                        }),
+                      ],
+                    ],
+                  );
+                }
+
+                final groups = controller.groups;
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: showCreateGroupDialog,
+                          icon: const Icon(Icons.group_add_outlined),
+                          label: const Text('Create Group'),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: groups.length,
+                        itemBuilder: (_, index) {
+                          final group = groups[index];
+                          final hasUnread = group.unreadCount > 0;
+                          return Card(
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFF5B5FEF).withOpacity(.12),
+                                child: const Icon(Icons.groups_2_outlined),
+                              ),
+                              title: Text(group.name),
+                              subtitle: Text(
+                                group.lastMessage.isEmpty
+                                    ? '${group.members.length} members'
+                                    : group.lastMessage,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: hasUnread
+                                  ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF5B5FEF),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  group.unreadCount > 99
+                                      ? '99+'
+                                      : group.unreadCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                                  : Text(formatLastMessageTime(group.lastMessageAt?.toDate())),
+                              onTap: () {
+                                final eligible = controller.users.map((e) => e.user).toList();
+                                Get.toNamed(
+                                  AppRoutes.groupChat,
+                                  arguments: {
+                                    'groupId': group.groupId,
+                                    'name': group.name,
+                                    'members': group.members,
+                                    'eligibleUsers': eligible,
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               }),
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: bottomTabIndex,
+        onTap: (value) => setState(() => bottomTabIndex = value),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Chats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group_add_outlined),
+            label: 'Requests',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups_2_outlined),
+            label: 'Groups',
+          ),
+        ],
       ),
     );
   }

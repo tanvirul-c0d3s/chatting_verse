@@ -9,6 +9,8 @@ class ChatMessage {
   final String fileName;
   final String thumbnailUrl;
   final String type;
+  final bool isEdited;
+  final bool isDeleted;
   final Timestamp? createdAt;
   final List<dynamic> seenBy;
 
@@ -21,6 +23,8 @@ class ChatMessage {
     required this.fileName,
     required this.thumbnailUrl,
     required this.type,
+    required this.isEdited,
+    required this.isDeleted,
     this.createdAt,
     required this.seenBy,
   });
@@ -35,6 +39,8 @@ class ChatMessage {
       fileName: map['fileName'] ?? '',
       thumbnailUrl: map['thumbnailUrl'] ?? '',
       type: map['type'] ?? 'text',
+      isEdited: map['isEdited'] ?? false,
+      isDeleted: map['isDeleted'] ?? false,
       createdAt: map['createdAt'],
       seenBy: map['seenBy'] ?? [],
     );
@@ -50,6 +56,8 @@ class ChatMessage {
       'fileName': fileName,
       'thumbnailUrl': thumbnailUrl,
       'type': type,
+      'isEdited': isEdited,
+      'isDeleted': isDeleted,
       'createdAt': createdAt,
       'seenBy': seenBy,
     };

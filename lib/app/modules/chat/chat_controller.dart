@@ -1,24 +1,18 @@
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/app_user.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/chat_service.dart';
-import '../../data/services/storage_service.dart';
 import '../../utils/helpers.dart';
 
 class ChatController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
   final ChatService _chatService = Get.find<ChatService>();
-  final StorageService _storageService = Get.find<StorageService>();
 
   late AppUser otherUser;
   late String roomId;
 
-  final isUploading = false.obs;
   final isRoomReady = false.obs;
 
   bool _didMarkInitialRead = false;
@@ -77,6 +71,32 @@ class ChatController extends GetxController {
     );
   }
 
+  Future<void> editMyTextMessage({
+    required String messageId,
+    required String text,
+  }) async {
+    final currentUid = myUid;
+    if (currentUid == null) return;
+
+    await _chatService.editTextMessage(
+      roomId: roomId,
+      messageId: messageId,
+      myUid: currentUid,
+      newText: text,
+    );
+  }
+
+  Future<void> deleteMyTextMessage(String messageId) async {
+    final currentUid = myUid;
+    if (currentUid == null) return;
+
+    await _chatService.deleteTextMessage(
+      roomId: roomId,
+      messageId: messageId,
+      myUid: currentUid,
+    );
+  }
+
   Future<void> markMessagesAsRead() async {
     if (!isRoomReady.value) return;
 
@@ -89,8 +109,7 @@ class ChatController extends GetxController {
         myUid: currentUid,
       );
     } catch (_) {
-      // user ke snackbar dekhabo na
-      // silently ignore korchi
+      // silently ignore
     }
   }
 
@@ -99,57 +118,5 @@ class ChatController extends GetxController {
 
     _didMarkInitialRead = true;
     await markMessagesAsRead();
-  }
-
-  Future<void> pickAndSendMedia(String type) async {
-    try {
-      isUploading.value = true;
-
-      FileType fileType = FileType.any;
-      List<String>? allowedExtensions;
-
-      if (type == 'image') {
-        fileType = FileType.image;
-      } else if (type == 'video') {
-        fileType = FileType.video;
-      } else if (type == 'audio') {
-        fileType = FileType.custom;
-        allowedExtensions = ['mp3', 'wav', 'm4a', 'aac'];
-      }
-
-      final result = await FilePicker.platform.pickFiles(
-        type: fileType,
-        allowMultiple: false,
-        withData: true,
-        allowedExtensions: allowedExtensions,
-      );
-
-      if (result == null || result.files.isEmpty) return;
-
-      final file = result.files.first;
-      final Uint8List? bytes = file.bytes;
-      if (bytes == null) return;
-
-      final currentUid = myUid;
-      if (currentUid == null) return;
-
-      final url = await _storageService.uploadChatFileBytes(
-        roomId: roomId,
-        fileName: file.name,
-        bytes: bytes,
-      );
-
-      await _chatService.sendMedia(
-        myUid: currentUid,
-        otherUid: otherUser.uid,
-        fileUrl: url,
-        fileName: file.name,
-        type: type,
-      );
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
-    } finally {
-      isUploading.value = false;
-    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../data/models/chat_message.dart';
 import 'media_preview_widget.dart';
 
@@ -51,14 +52,33 @@ class MessageBubble extends StatelessWidget {
           ),
         ),
         child: message.type == 'text'
-            ? Text(
-          message.text,
-          style: TextStyle(
-            color: isMe ? Colors.white : Colors.black87,
-            fontSize: 15,
-            height: 1.4,
-            fontWeight: FontWeight.w500,
-          ),
+            ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.text,
+              style: TextStyle(
+                color: isMe ? Colors.white : Colors.black87,
+                fontSize: 15,
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+                fontStyle:
+                message.isDeleted ? FontStyle.italic : FontStyle.normal,
+              ),
+            ),
+            if (message.isEdited && !message.isDeleted)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'edited',
+                  style: TextStyle(
+                    color: isMe ? Colors.white70 : Colors.black54,
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+          ],
         )
             : MediaPreviewWidget(
           type: message.type,
