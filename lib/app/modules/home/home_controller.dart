@@ -142,14 +142,12 @@ class HomeController extends GetxController {
         final sortedDocs = [...snapshot.docs]..sort((a, b) {
           final aData = a.data();
           final bData = b.data();
-          final aTs =
-              (aData['updatedAt'] as Timestamp?) ??
-                  (aData['lastMessageAt'] as Timestamp?) ??
-                  (aData['createdAt'] as Timestamp?);
-          final bTs =
-              (bData['updatedAt'] as Timestamp?) ??
-                  (bData['lastMessageAt'] as Timestamp?) ??
-                  (bData['createdAt'] as Timestamp?);
+          final aTs = (aData['updatedAt'] as Timestamp?) ??
+              (aData['lastMessageAt'] as Timestamp?) ??
+              (aData['createdAt'] as Timestamp?);
+          final bTs = (bData['updatedAt'] as Timestamp?) ??
+              (bData['lastMessageAt'] as Timestamp?) ??
+              (bData['createdAt'] as Timestamp?);
 
           final aMs = aTs?.millisecondsSinceEpoch ?? 0;
           final bMs = bTs?.millisecondsSinceEpoch ?? 0;
@@ -183,6 +181,8 @@ class HomeController extends GetxController {
 
     _sentRequestsSubscription = _chatService.sentRequestsStream(myUid).listen(
           (snapshot) {
+        _requestsMap.removeWhere((_, item) => item.senderId == myUid);
+
         for (final doc in snapshot.docs) {
           final data = doc.data();
           _requestsMap[doc.id] = ChatRequestItem(
@@ -196,30 +196,31 @@ class HomeController extends GetxController {
       },
     );
 
-    _receivedRequestsSubscription = _chatService
-        .receivedRequestsStream(myUid)
-        .listen((snapshot) {
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        _requestsMap[doc.id] = ChatRequestItem(
-          requestId: doc.id,
-          senderId: (data['senderId'] ?? '').toString(),
-          receiverId: (data['receiverId'] ?? '').toString(),
-          status: (data['status'] ?? '').toString(),
-        );
-      }
+    _receivedRequestsSubscription =
+        _chatService.receivedRequestsStream(myUid).listen((snapshot) {
+          _requestsMap.removeWhere((_, item) => item.receiverId == myUid);
 
-      incomingRequests.assignAll(
-        _requestsMap.values.where(
-              (item) =>
-          item.receiverId == myUid &&
-              item.status == 'pending' &&
-              _usersMap[item.senderId] != null,
-        ),
-      );
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+            _requestsMap[doc.id] = ChatRequestItem(
+              requestId: doc.id,
+              senderId: (data['senderId'] ?? '').toString(),
+              receiverId: (data['receiverId'] ?? '').toString(),
+              status: (data['status'] ?? '').toString(),
+            );
+          }
 
-      _combineUsersWithRooms(myUid);
-    });
+          incomingRequests.assignAll(
+            _requestsMap.values.where(
+                  (item) =>
+              item.receiverId == myUid &&
+                  item.status == 'pending' &&
+                  _usersMap[item.senderId] != null,
+            ),
+          );
+
+          _combineUsersWithRooms(myUid);
+        });
   }
 
   Future<void> sendRequest(String targetUid) async {
@@ -333,9 +334,9 @@ class HomeController extends GetxController {
         return bMillis.compareTo(aMillis);
       }
 
-      return a.user.fullName.toLowerCase().compareTo(
-        b.user.fullName.toLowerCase(),
-      );
+      return a.user.fullName
+          .toLowerCase()
+          .compareTo(b.user.fullName.toLowerCase());
     });
 
     users.assignAll(items);

@@ -366,4 +366,38 @@ class ChatService {
       'unreadCounts.$myUid': 0,
     }, SetOptions(merge: true));
   }
+
+  Future<void> unfriend({
+    required String myUid,
+    required String otherUid,
+  }) async {
+    if (myUid == otherUid) return;
+
+    final requestId = getChatRoomId(myUid, otherUid);
+    final roomId = requestId;
+
+    final roomRef = _firestore.collection('chat_rooms').doc(roomId);
+    final requestRef = _firestore.collection('chat_requests').doc(requestId);
+
+    while (true) {
+      final messages = await roomRef.collection('messages').limit(200).get();
+      if (messages.docs.isEmpty) break;
+
+      final batch = _firestore.batch();
+      for (final doc in messages.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+
+    final roomDoc = await roomRef.get();
+    if (roomDoc.exists) {
+      await roomRef.delete();
+    }
+
+    final requestDoc = await requestRef.get();
+    if (requestDoc.exists) {
+      await requestRef.delete();
+    }
+  }
 }
