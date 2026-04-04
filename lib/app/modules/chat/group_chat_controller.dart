@@ -67,6 +67,13 @@ class GroupChatController extends GetxController {
     );
   }
 
+  Future<void> leaveGroup() async {
+    final uid = myUid;
+    if (uid == null) return;
+
+    await _chatService.leaveGroup(groupId: groupId, userId: uid);
+  }
+
   Future<void> addMembers(List<String> userIds) async {
     await _chatService.addMembersToGroup(groupId: groupId, memberIds: userIds);
   }

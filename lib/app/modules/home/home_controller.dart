@@ -90,6 +90,34 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
+  Future<void> clearSessionStream() async {
+    await clearSessionStreams();
+  }
+
+  Future<void> clearSessionStreams() async {
+    await _usersSubscription?.cancel();
+    await _roomsSubscription?.cancel();
+    await _groupsSubscription?.cancel();
+    await _sentRequestsSubscription?.cancel();
+    await _receivedRequestsSubscription?.cancel();
+
+    _usersSubscription = null;
+    _roomsSubscription = null;
+    _groupsSubscription = null;
+    _sentRequestsSubscription = null;
+    _receivedRequestsSubscription = null;
+
+    _usersMap.clear();
+    _roomsMap.clear();
+    _requestsMap.clear();
+
+    users.clear();
+    groups.clear();
+    allUsers.clear();
+    incomingRequests.clear();
+    isLoading.value = false;
+  }
+
   Future<void> loadUsers() async {
     final myUid = _authService.currentUser?.uid;
 
@@ -167,8 +195,9 @@ class HomeController extends GetxController {
             members: List<String>.from(data['members'] ?? const []),
             lastMessage: (data['lastMessage'] ?? '').toString(),
             lastMessageAt: data['lastMessageAt'] as Timestamp?,
-            unreadCount:
-            unreadMap[myUid] is num ? (unreadMap[myUid] as num).toInt() : 0,
+            unreadCount: unreadMap[myUid] is num
+                ? (unreadMap[myUid] as num).toInt()
+                : 0,
           );
         }).toList();
 

@@ -16,7 +16,8 @@ class ChatService {
         .snapshots();
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> groupMessagesStream(String groupId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> groupMessagesStream(
+      String groupId) {
     return _firestore
         .collection('chat_groups')
         .doc(groupId)
@@ -244,8 +245,7 @@ class ChatService {
       'seenBy': [myUid],
     });
 
-    final groupDoc =
-    await _firestore.collection('chat_groups').doc(groupId).get();
+    final groupDoc = await _firestore.collection('chat_groups').doc(groupId).get();
     final members = List<String>.from(groupDoc.data()?['members'] ?? const []);
 
     final unreadUpdate = <String, dynamic>{};
@@ -365,6 +365,52 @@ class ChatService {
     await groupRef.set({
       'unreadCounts.$myUid': 0,
     }, SetOptions(merge: true));
+  }
+
+  Future<void> leaveGroup({
+    required String groupId,
+    required String userId,
+  }) async {
+    final groupRef = _firestore.collection('chat_groups').doc(groupId);
+
+    await _firestore.runTransaction((tx) async {
+      final snap = await tx.get(groupRef);
+      if (!snap.exists) return;
+
+      final data = snap.data() ?? <String, dynamic>{};
+      final members = List<String>.from(data['members'] ?? const []);
+      final admins = List<String>.from(data['admins'] ?? const []);
+      final unreadRaw = data['unreadCounts'];
+      final unreadCounts = unreadRaw is Map
+          ? Map<String, dynamic>.from(unreadRaw)
+          : <String, dynamic>{};
+
+      if (!members.contains(userId)) return;
+
+      members.removeWhere((id) => id == userId);
+      admins.removeWhere((id) => id == userId);
+      unreadCounts.remove(userId);
+
+      if (members.isEmpty) {
+        tx.delete(groupRef);
+        return;
+      }
+
+      if (admins.isEmpty) {
+        admins.add(members.first);
+      }
+
+      final createdBy = (data['createdBy'] ?? '').toString();
+      final nextCreatedBy = createdBy == userId ? admins.first : createdBy;
+
+      tx.set(groupRef, {
+        'members': members,
+        'admins': admins,
+        'createdBy': nextCreatedBy,
+        'unreadCounts': unreadCounts,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
   }
 
   Future<void> unfriend({

@@ -5,6 +5,8 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/notification_service.dart';
 import '../../data/services/session_service.dart';
 import '../../routes/app_routes.dart';
+import '../home/home_controller.dart';
+import '../profile/profile_controller.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -46,21 +48,25 @@ class AuthController extends GetxController {
         fcmToken = '';
       }
 
-      final credential = await _authService.register(
+      final credential = await _authService
+          .register(
         fullName: fullName,
         address: address,
         email: email,
         password: password,
         photoUrl: '',
         fcmToken: fcmToken,
-      ).timeout(const Duration(seconds: 20));
+      )
+          .timeout(const Duration(seconds: 20));
 
       final uid = credential.user!.uid;
 
-      await _sessionService.saveLogin(
+      await _sessionService
+          .saveLogin(
         uid: uid,
         email: email,
-      ).timeout(const Duration(seconds: 10));
+      )
+          .timeout(const Duration(seconds: 10));
 
       Get.snackbar('Success', 'Registration successful');
       Get.offAllNamed(AppRoutes.home);
@@ -114,6 +120,13 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       isLoading.value = true;
+
+      if (Get.isRegistered<HomeController>()) {
+        await Get.find<HomeController>().clearSessionStreams();
+      }
+      if (Get.isRegistered<ProfileController>()) {
+        await Get.find<ProfileController>().clearSessionStream();
+      }
 
       await _authService.logout();
       await _sessionService.clear();

@@ -19,6 +19,13 @@ class ProfileController extends GetxController {
     super.onClose();
   }
 
+  Future<void> clearSessionStream() async {
+    await _profileSubscription?.cancel();
+    _profileSubscription = null;
+    user.value = null;
+    isLoading.value = false;
+  }
+
   Future<void> loadProfile() async {
     final uid = _authService.currentUser?.uid;
 

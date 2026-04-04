@@ -369,6 +369,54 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     );
   }
 
+
+
+  Future<void> handleLeaveGroup() async {
+    final uid = controller.myUid;
+    if (uid == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave group?'),
+        content: const Text(
+          'You will stop receiving messages from this group. You can be added again later by a group member.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await controller.leaveGroup();
+      _memberIds.remove(uid);
+
+      if (!mounted) return;
+
+      Get.snackbar(
+        'Group',
+        'You left the group successfully.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      Get.back();
+    } catch (e) {
+      if (!mounted) return;
+      Get.snackbar('Group', 'Failed to leave group: $e');
+    }
+  }
+
   Future<void> onLongPressMessage(ChatMessage msg) async {
     final uid = controller.myUid;
     if (uid == null) return;
@@ -780,6 +828,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
     );
   }
+
   Widget _buildMessages() {
     return Expanded(
       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -914,15 +963,47 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: Material(
-              color: _primary.withOpacity(.10),
-              borderRadius: BorderRadius.circular(14),
-              child: IconButton(
-                onPressed: handleAddMembers,
-                icon: const Icon(
-                  Icons.person_add_alt_1_rounded,
-                  color: _primary,
+            child: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'add_member') {
+                  handleAddMembers();
+                  return;
+                }
+
+                if (value == 'leave_group') {
+                  handleLeaveGroup();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'add_member',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.person_add_alt_1_rounded),
+                    title: Text('Add members'),
+                  ),
                 ),
+                PopupMenuItem<String>(
+                  value: 'leave_group',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      'Leave group',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ),
+              ],
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _primary.withOpacity(.10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.more_vert_rounded, color: _primary),
               ),
             ),
           ),
